@@ -1,0 +1,10 @@
+# Project artifacts
+/dist/
+/node_modules/
+/src/private_relay_ips.ts
+
+# Random excess stuff
+.DS_Store
+.idea/
+.vscode/
+yarn-error.log
