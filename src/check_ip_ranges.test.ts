@@ -17,14 +17,14 @@ describe('Check IP ranges', () => {
 
     expect(ranges).toEqual({
       v4: [
-        { startIp: 0x681c26b8n, subnetBits: 8 }, // ::ffff:104.28.38.184/120
-        { startIp: 0x924b9b0cn, subnetBits: 0 }, // 146.75.155.12
-        { startIp: 0xace0f000n, subnetBits: 4 }, // 172.224.240.0/28
-        { startIp: 0xace0f722n, subnetBits: 0 }, // 172.224.247.34/32
+        [0x681c26b8n, 8], // ::ffff:104.28.38.184/120
+        [0x924b9b0cn, 0], // 146.75.155.12
+        [0xace0f000n, 4], // 172.224.240.0/28
+        [0xace0f722n, 0], // 172.224.247.34/32
       ],
       v6: [
-        { startIp: 0x260654c027e01ca00000000000000000n, subnetBits: 56 }, // 2606:54c0:27e0:1ca0::/56
-        { startIp: 0x2a044e41002f006f0000000000000000n, subnetBits: 0 }, // 2a04:4e41:002f:006f::
+        [0x260654c027e01ca00000000000000000n, 56], // 2606:54c0:27e0:1ca0::/56
+        [0x2a044e41002f006f0000000000000000n, 0], // 2a04:4e41:002f:006f::
       ],
     })
   })

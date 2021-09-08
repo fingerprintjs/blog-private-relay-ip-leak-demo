@@ -20,7 +20,7 @@ async function* getRawIps(ipListUrl: string) {
   const printProgress = (progress: number) => {
     if (!isCI) {
       clearProgress()
-      process.stdout.write(`Downloading IP ranges: ${(progress * 100).toFixed(1)}%`)
+      process.stdout.write(`Downloading Private Relay IP ranges: ${(progress * 100).toFixed(1)}%`)
     }
   }
 
@@ -46,11 +46,9 @@ function getIpRanges(ipListUrl: string) {
 }
 
 async function outputIpRanges(ipRanges: IPRangeCache, filePath: string) {
-  const stringifyIpRange = ({ startIp, subnetBits }: IPRange) =>
-    `{ startIp: 0x${startIp.toString(16)}n, subnetBits: ${subnetBits} }`
+  const stringifyIpRange = ([startIp, subnetBitCount]: IPRange) => `[0x${startIp.toString(16)}n,${subnetBitCount}]`
 
-  const stringifyIpRanges = (ipRanges: IPRange[]) =>
-    `[\n${ipRanges.map((ipRange) => `    ${stringifyIpRange(ipRange)},`).join('\n')}\n  ]`
+  const stringifyIpRanges = (ipRanges: IPRange[]) => `[${ipRanges.map(stringifyIpRange).join(',')}]`
 
   await fsAsync.writeFile(
     filePath,

@@ -3,7 +3,8 @@ import { isIpInRanges } from './check_ip_ranges'
 import privateRelayEgressIpRanges from './private_relay_ips'
 
 /**
- * A framework-agnostic implementation of the main page endpoint
+ * A framework-agnostic implementation of the main page endpoint.
+ * It can be used with Express, AWS Lambda, Serverless or something else.
  */
 export default function serveMainPage(requestIp: string): string {
   return makePageHtml(humanizeIp(requestIp), isIpInRanges(privateRelayEgressIpRanges, requestIp))

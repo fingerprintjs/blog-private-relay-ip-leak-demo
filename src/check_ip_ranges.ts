@@ -1,10 +1,7 @@
-import { parse as parseIp } from 'ip-bigint'
+import { IP, parse as parseIpOrFail } from 'ip-bigint'
 import binarySearch from 'binary-search'
 
-export interface IPRange {
-  startIp: bigint
-  subnetBits: number
-}
+export type IPRange = [startIp: bigint, subnetBitCount: number]
 
 export type IPRangeCache = {
   /** Sorted in ascending order */
@@ -13,38 +10,9 @@ export type IPRangeCache = {
   v6: IPRange[]
 }
 
-function parseIpRange(rawIpRange: string): [4 | 6, IPRange] | undefined {
+function parseIp(rawIp: string): IP | undefined {
   try {
-    const [, rawIp, , subnetString] = /^(.*?)(\/(\d*))?$/.exec(rawIpRange) || ['', '']
-    const ipData = parseIp(rawIp)
-
-    if (ipData.version === 4) {
-      return [
-        4,
-        {
-          startIp: ipData.number,
-          subnetBits: 32 - Number(subnetString || 32),
-        },
-      ]
-    }
-
-    if (ipData.ipv4mapped) {
-      return [
-        4,
-        {
-          startIp: ipData.number & 0xffffffffn,
-          subnetBits: 128 - Number(subnetString || 128),
-        },
-      ]
-    }
-
-    return [
-      6,
-      {
-        startIp: ipData.number,
-        subnetBits: 128 - Number(subnetString || 128),
-      },
-    ]
+    return parseIpOrFail(rawIp)
   } catch (error) {
     if (error instanceof Error && error.message.startsWith('Invalid IP address: ')) {
       return undefined
@@ -53,8 +21,27 @@ function parseIpRange(rawIpRange: string): [4 | 6, IPRange] | undefined {
   }
 }
 
+function parseIpRange(rawIpRange: string): [4 | 6, IPRange] | undefined {
+  const [, rawIp, , subnetString] = /^(.*?)(\/(\d*))?$/.exec(rawIpRange) || ['', '']
+  const ipData = parseIp(rawIp)
+
+  if (!ipData) {
+    return undefined
+  }
+
+  if (ipData.version === 4) {
+    return [4, [ipData.number, 32 - Number(subnetString || 32)]]
+  }
+
+  if (ipData.ipv4mapped) {
+    return [4, [ipData.number & 0xffffffffn, 128 - Number(subnetString || 128)]]
+  }
+
+  return [6, [ipData.number, 128 - Number(subnetString || 128)]]
+}
+
 function compareIpRanges(range1: IPRange, range2: IPRange): number {
-  return Number(range1.startIp - range2.startIp)
+  return Number(range1[0] - range2[0])
 }
 
 export async function parseIpRanges(rawIpRanges: AsyncIterable<string>): Promise<IPRangeCache> {
@@ -80,7 +67,7 @@ export async function parseIpRanges(rawIpRanges: AsyncIterable<string>): Promise
  * The list of IP ranges must be in ascending order.
  */
 function findClosestIpRange(ipRanges: IPRange[], ip: bigint): IPRange | undefined {
-  const index = binarySearch(ipRanges, ip, ({ startIp }, needleIp) => Number(startIp - needleIp))
+  const index = binarySearch(ipRanges, ip, ([startIp], needleIp) => Number(startIp - needleIp))
   if (index >= 0) {
     return ipRanges[index]
   }
@@ -91,16 +78,19 @@ function findClosestIpRange(ipRanges: IPRange[], ip: bigint): IPRange | undefine
 }
 
 function isIpInRange(ipRange: IPRange, ip: bigint): boolean {
-  if (ip < ipRange.startIp) {
+  if (ip < ipRange[0]) {
     return false
   }
-  return ip < ipRange.startIp + BigInt(2) ** BigInt(ipRange.subnetBits)
+  return ip < ipRange[0] + BigInt(2) ** BigInt(ipRange[1])
 }
 
 export function isIpInRanges(ipRangeCache: IPRangeCache, rawIp: string): boolean {
   let ipRanges: IPRange[]
   let ipNumber: bigint
   const ipData = parseIp(rawIp)
+  if (!ipData) {
+    return false
+  }
 
   if (ipData.version === 4) {
     ipRanges = ipRangeCache.v4
