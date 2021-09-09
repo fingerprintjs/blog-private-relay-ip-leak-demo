@@ -1,10 +1,9 @@
 # Reference on this file: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
-name: Lint, test, build and deploy
+name: Lint, test and build
 on:
   push:
     branches:
       - master
-      - develop
   pull_request:
 jobs:
   build:
@@ -29,40 +28,15 @@ jobs:
       - name: Build
         run: yarn build
       - name: Leave only production Node packages
-        run: yarn install --production
-      - name: Make an archive for AWS Lambda
-        run: zip -rq deployment.zip dist node_modules
-      - name: Restore Node packages for proper caching
-        run: yarn install
-      - name: Save the archive
+        run: cp -a node_modules node_modules_backup && yarn install --production
+      - name: Make an archive for AWS Lambda and save it as an artifact
         uses: actions/upload-artifact@v2
         with:
-          name: deployment
-          path: deployment.zip
-  deploy_staging:
-    name: Deploy to staging
-    needs: build
-    if: github.ref == 'refs/heads/develop'
-    runs-on: ubuntu-latest
-    timeout-minutes: 1
-    steps:
-      - name: Download the deployment archive
-        uses: actions/download-artifact@v2
-        with:
-          name: deployment
-      - name: Upload to AWS Lambda
-        uses: appleboy/lambda-action@v0.1.5
-        with:
-          aws_access_key_id: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
-          aws_region: ${{ secrets.STAGING_AWS_REGION }}
-          function_name: ${{ secrets.STAGING_AWS_LAMBDA_NAME }}
-          zip_file: deployment.zip
-          memory_size: 512 # The function consumed 223MB when this code was written
-          timeout: 3
-          handler: dist/lambda.handler
-          runtime: nodejs14.x
-          environment: NODE_OPTIONS=--enable-source-maps
-          debug: true
-          # The GITHUB_REPOSITORY environment variable is empty for some reason
-          description: HTTP server that runs the iCloud Private Relay IP leak demo (https://github.com/fingerprintjs/blog-private-relay-ip-leak-demo)
+          name: lambda
+          path: |
+            dist/
+            node_modules/
+      - name: Restore Node packages for proper caching
+        run: rm -r node_modules && mv node_modules_backup node_modules
+      - name: How to deploy
+        run: echo 'In order to deploy the lambda, download the "lambda" artifact of this run and upload it into the function in the AWS Lambda UI (Upload from — .zip file)'

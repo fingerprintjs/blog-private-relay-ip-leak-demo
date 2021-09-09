@@ -67,7 +67,7 @@ export async function parseIpRanges(rawIpRanges: AsyncIterable<string>): Promise
  * The list of IP ranges must be in ascending order.
  */
 function findClosestIpRange(ipRanges: IPRange[], ip: bigint): IPRange | undefined {
-  const index = binarySearch(ipRanges, ip, ([startIp], needleIp) => Number(startIp - needleIp))
+  const index = binarySearch(ipRanges, [ip, 0], compareIpRanges)
   if (index >= 0) {
     return ipRanges[index]
   }

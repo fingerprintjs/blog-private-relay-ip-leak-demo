@@ -45,7 +45,7 @@ function makePageHtml(ip: string, isPrivateRelay: boolean): string {
         font-weight: 500;
         line-height: 1.4;
         box-sizing: border-box;
-        padding: 0 2rem;
+        padding: 0 20px; /* Matches the website layout */
       }
       main {
         max-width: 100%;
