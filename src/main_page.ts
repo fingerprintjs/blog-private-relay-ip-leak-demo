@@ -2,12 +2,20 @@ import { escapeHtml, humanizeIp } from './utils'
 import { isIpInRanges } from './check_ip_ranges'
 import privateRelayEgressIpRanges from './private_relay_ips'
 
+interface Page {
+  body: string
+  headers: Record<string, string>
+}
+
 /**
  * A framework-agnostic implementation of the main page endpoint.
  * It can be used with Express, AWS Lambda, Serverless or something else.
  */
-export default function serveMainPage(requestIp: string): string {
-  return makePageHtml(humanizeIp(requestIp), isIpInRanges(privateRelayEgressIpRanges, requestIp))
+export default function serveMainPage(requestIp: string): Page {
+  return {
+    body: makePageHtml(humanizeIp(requestIp), isIpInRanges(privateRelayEgressIpRanges, requestIp)),
+    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+  }
 }
 
 function makePageHtml(ip: string, isPrivateRelay: boolean): string {
@@ -15,7 +23,6 @@ function makePageHtml(ip: string, isPrivateRelay: boolean): string {
   return `<!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>iCloud Private Relay IP leak demo</title>

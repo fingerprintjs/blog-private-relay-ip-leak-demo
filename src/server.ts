@@ -13,7 +13,11 @@ const app = express()
 const port = Number(process.env.PORT || 8080)
 
 app.get('/', (req, res) => {
-  res.send(serveMainPage(req.ip))
+  const { body, headers } = serveMainPage(req.ip)
+  for (const [name, value] of Object.entries(headers)) {
+    res.setHeader(name, value)
+  }
+  res.send(body)
 })
 
 app.listen(port, () => {

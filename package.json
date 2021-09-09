@@ -7,7 +7,7 @@
     "download-private-relay-ips": "ts-node ./src/download_private_relay_ips.ts",
     "dev-server": "nodemon --watch src -e js,json,ts --exec ts-node src/server.ts",
     "dev": "yarn run download-private-relay-ips && yarn run dev-server",
-    "compile-ts": "rimraf dist && tsc --excludeFiles '**/*.test.ts'",
+    "compile-ts": "rimraf dist && tsc",
     "build": "yarn download-private-relay-ips && yarn compile-ts",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx --ignore-path .gitignore --max-warnings 0 .",
     "lint:fix": "yarn lint --fix",

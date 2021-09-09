@@ -9,12 +9,6 @@ import serveMainPage from './main_page'
  * The function to handle HTTP requests
  */
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
-  if (!/^\/?$/.test(event.requestContext.http.path)) {
-    return {
-      statusCode: 404,
-      body: 'Page not found',
-    }
-  }
   if (event.requestContext.http.method !== 'GET') {
     return {
       statusCode: 405,
@@ -23,6 +17,6 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   }
   return {
     statusCode: 200,
-    body: await serveMainPage(event.requestContext.http.sourceIp),
+    ...serveMainPage(event.requestContext.http.sourceIp),
   }
 }
