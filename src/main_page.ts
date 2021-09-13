@@ -69,6 +69,7 @@ function makePageHtml(ip: string, isPrivateRelay: boolean): string {
         font-size: 2rem;
         letter-spacing: -0.01em;
         line-height: 1.3;
+        white-space: pre-line;
       }
       .ip.compact {
         font-size: 1em;
@@ -112,15 +113,18 @@ function makePageHtml(ip: string, isPrivateRelay: boolean): string {
         </div>
       </section>
       <section>
-        <div class="header">Your leaking IP</div>
-        <div class="ip" id="leakingIP">...</div>
+        <div class="header" id="leakingIpHeader">Your leaking IP</div>
+        <div class="ip" id="leakingIp">...</div>
       </section>
     </main>
     <script>
       function printOutput(data) {
-        const output = document.getElementById('leakingIP')
-        output.textContent = data
-        output.classList.toggle('compact', data.length > ${bigIpMaxLength})
+        const output = document.getElementById('leakingIp')
+        output.textContent = data.join(',\\n')
+        output.classList.toggle('compact', data.length > 1 || Math.max(...data.map(l => l.length)) > ${bigIpMaxLength})
+
+        const outputHeader = document.getElementById('leakingIpHeader')
+        outputHeader.textContent = outputHeader.textContent.replace(/ips?/i, data.length > 1 ? 'IPs' : 'IP')
       }
 
       try {
@@ -148,7 +152,7 @@ function makePageHtml(ip: string, isPrivateRelay: boolean): string {
             }
           } else {
             // There will be no other ICE candidates
-            printOutput(ips.join(', '))
+            printOutput(ips)
           }
         }
 
@@ -158,7 +162,7 @@ function makePageHtml(ip: string, isPrivateRelay: boolean): string {
           peerConnection.setLocalDescription(description)
         })
       } catch (error) {
-        printOutput('(browser not supported)')
+        printOutput(['(browser not supported)'])
         throw error
       }
     </script>
